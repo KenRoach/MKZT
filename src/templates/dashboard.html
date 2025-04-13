@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bot Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">WhatsApp Bot Dashboard</h1>
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-gray-500 text-sm font-medium">Total Requests</h3>
+                <p class="text-2xl font-bold">{{ total_requests }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-gray-500 text-sm font-medium">Error Rate</h3>
+                <p class="text-2xl font-bold">{{ "%.2f"|format(error_rate) }}%</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-gray-500 text-sm font-medium">Avg Response Time</h3>
+                <p class="text-2xl font-bold">{{ "%.2f"|format(avg_response_time) }}ms</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-gray-500 text-sm font-medium">Total Errors</h3>
+                <p class="text-2xl font-bold">{{ total_errors }}</p>
+            </div>
+        </div>
+        
+        <!-- Charts -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium mb-4">Request Volume</h3>
+                <canvas id="requestsChart"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium mb-4">Error Rate Trend</h3>
+                <canvas id="errorsChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Recent Notifications -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium mb-4">Recent Notifications</h3>
+            <div class="space-y-4">
+                {% for notification in recent_notifications %}
+                <div class="border-l-4 {% if notification.type == 'error' %}border-red-500{% else %}border-green-500{% endif %} pl-4">
+                    <p class="text-sm text-gray-600">{{ notification.timestamp }}</p>
+                    <p class="font-medium">{{ notification.message }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts
+        const requestsCtx = document.getElementById('requestsChart').getContext('2d');
+        const errorsCtx = document.getElementById('errorsChart').getContext('2d');
+        
+        const metrics = {{ metrics|tojson }};
+        
+        new Chart(requestsCtx, {
+            type: 'line',
+            data: {
+                labels: metrics.map(m => new Date(m.timestamp).toLocaleTimeString()),
+                datasets: [{
+                    label: 'Requests',
+                    data: metrics.map(m => m.total_requests),
+                    borderColor: 'rgb(59, 130, 246)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        new Chart(errorsCtx, {
+            type: 'line',
+            data: {
+                labels: metrics.map(m => new Date(m.timestamp).toLocaleTimeString()),
+                datasets: [{
+                    label: 'Error Rate (%)',
+                    data: metrics.map(m => (m.error_count / m.total_requests * 100)),
+                    borderColor: 'rgb(239, 68, 68)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
