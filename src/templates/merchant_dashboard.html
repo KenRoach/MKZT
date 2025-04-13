@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Dashboard - Inventory Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background-color: #343a40;
+            color: white;
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .nav-link:hover {
+            color: white;
+        }
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .card {
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+        }
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .user-message {
+            background-color: #e9ecef;
+            margin-left: 20%;
+        }
+        .bot-message {
+            background-color: #007bff;
+            color: white;
+            margin-right: 20%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar p-3">
+                <h4 class="mb-4">Merchant Dashboard</h4>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#inventory" data-bs-toggle="tab">
+                            <i class="bi bi-box-seam me-2"></i> Inventory
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#ai-assistant" data-bs-toggle="tab">
+                            <i class="bi bi-robot me-2"></i> AI Assistant
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#reports" data-bs-toggle="tab">
+                            <i class="bi bi-graph-up me-2"></i> Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#alerts" data-bs-toggle="tab">
+                            <i class="bi bi-bell me-2"></i> Alerts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#settings" data-bs-toggle="tab">
+                            <i class="bi bi-gear me-2"></i> Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 p-4">
+                <div class="tab-content">
+                    <!-- Inventory Tab -->
+                    <div class="tab-pane fade show active" id="inventory">
+                        <h2 class="mb-4">Inventory Management</h2>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card text-white bg-primary">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Items</h5>
+                                        <h2 class="card-text" id="total-items">0</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-warning">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Low Stock Items</h5>
+                                        <h2 class="card-text" id="low-stock-items">0</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-success">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Active Alerts</h5>
+                                        <h2 class="card-text" id="active-alerts">0</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Inventory Items</h5>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                                    <i class="bi bi-plus-circle me-1"></i> Add Item
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Category</th>
+                                                <th>Current Stock</th>
+                                                <th>Reorder Level</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="inventory-table-body">
+                                            <!-- Inventory items will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Assistant Tab -->
+                    <div class="tab-pane fade" id="ai-assistant">
+                        <h2 class="mb-4">AI Inventory Assistant</h2>
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Ask about your inventory</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chat-container mb-3" id="chat-container">
+                                    <div class="chat-message bot-message">
+                                        Hello! I'm your inventory assistant. How can I help you today?
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="query-input" placeholder="Ask a question about your inventory...">
+                                    <button class="btn btn-primary" id="send-query">
+                                        <i class="bi bi-send"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reports Tab -->
+                    <div class="tab-pane fade" id="reports">
+                        <h2 class="mb-4">Inventory Reports</h2>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Inventory Trends</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="trends-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Reorder Suggestions</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Item</th>
+                                                        <th>Current Stock</th>
+                                                        <th>Suggested Order</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="reorder-suggestions">
+                                                    <!-- Reorder suggestions will be loaded here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Inventory Report</h5>
+                                <button class="btn btn-success" id="generate-report">
+                                    <i class="bi bi-download me-1"></i> Generate Report
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="report-content">
+                                    <!-- Report content will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alerts Tab -->
+                    <div class="tab-pane fade" id="alerts">
+                        <h2 class="mb-4">Inventory Alerts</h2>
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Active Alerts</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="alerts-container">
+                                    <!-- Alerts will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div class="tab-pane fade" id="settings">
+                        <h2 class="mb-4">Inventory Settings</h2>
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">WhatsApp Integration</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-4">
+                                    <h6>Connect WhatsApp</h6>
+                                    <p>Manage your inventory through WhatsApp. Send messages to update your menu, prices, and inventory.</p>
+                                    <div class="input-group mb-3">
+                                        <input type="tel" class="form-control" id="whatsapp-phone" placeholder="Enter your WhatsApp number">
+                                        <button class="btn btn-primary" id="connect-whatsapp">
+                                            <i class="bi bi-whatsapp me-1"></i> Connect
+                                        </button>
+                                    </div>
+                                    <div id="whatsapp-status" class="alert alert-info d-none">
+                                        <!-- Status messages will be shown here -->
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>WhatsApp Commands</h6>
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Command</th>
+                                                    <th>Description</th>
+                                                    <th>Example</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><code>Add item</code></td>
+                                                    <td>Add a new inventory item</td>
+                                                    <td>"Add item: Pizza Margherita, $12.99, Italian pizza with tomato and mozzarella"</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>Update price</code></td>
+                                                    <td>Update item price</td>
+                                                    <td>"Update price: Pizza Margherita to $13.99"</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>View menu</code></td>
+                                                    <td>View current menu</td>
+                                                    <td>"View menu"</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>Add photo</code></td>
+                                                    <td>Add photo to item</td>
+                                                    <td>Send photo with caption "Add photo: Pizza Margherita"</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>Help</code></td>
+                                                    <td>View all commands</td>
+                                                    <td>"Help"</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>Notification Settings</h6>
+                                    <form id="notification-settings">
+                                        <div class="mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="low-stock-alerts" checked>
+                                                <label class="form-check-label" for="low-stock-alerts">Low Stock Alerts</label>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="expiry-alerts" checked>
+                                                <label class="form-check-label" for="expiry-alerts">Expiry Alerts</label>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="reorder-suggestions" checked>
+                                                <label class="form-check-label" for="reorder-suggestions">Reorder Suggestions</label>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Item Modal -->
+    <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addItemModalLabel">Add Inventory Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-item-form">
+                        <div class="mb-3">
+                            <label for="item-name" class="form-label">Item Name</label>
+                            <input type="text" class="form-control" id="item-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="item-category" class="form-label">Category</label>
+                            <select class="form-select" id="item-category" required>
+                                <option value="">Select a category</option>
+                                <option value="ingredients">Ingredients</option>
+                                <option value="packaging">Packaging</option>
+                                <option value="supplies">Supplies</option>
+                                <option value="equipment">Equipment</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="item-quantity" class="form-label">Initial Quantity</label>
+                            <input type="number" class="form-control" id="item-quantity" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="item-unit" class="form-label">Unit</label>
+                            <input type="text" class="form-control" id="item-unit" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reorder-level" class="form-label">Reorder Level</label>
+                            <input type="number" class="form-control" id="reorder-level" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reorder-quantity" class="form-label">Reorder Quantity</label>
+                            <input type="number" class="form-control" id="reorder-quantity" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-item">Save Item</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load inventory data
+            loadInventoryData();
+            
+            // Load alerts
+            loadAlerts();
+            
+            // Load reorder suggestions
+            loadReorderSuggestions();
+            
+            // Initialize chat functionality
+            initChat();
+            
+            // Initialize report generation
+            initReportGeneration();
+        });
+        
+        // Function to load inventory data
+        function loadInventoryData() {
+            // This would be replaced with an actual API call
+            fetch('/api/inventory/items')
+                .then(response => response.json())
+                .then(data => {
+                    updateInventoryTable(data);
+                    updateDashboardStats(data);
+                })
+                .catch(error => console.error('Error loading inventory data:', error));
+        }
+        
+        // Function to update the inventory table
+        function updateInventoryTable(items) {
+            const tableBody = document.getElementById('inventory-table-body');
+            tableBody.innerHTML = '';
+            
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.category}</td>
+                    <td>${item.quantity} ${item.unit}</td>
+                    <td>${item.reorder_level}</td>
+                    <td>
+                        <span class="badge ${item.quantity <= item.reorder_level ? 'bg-danger' : 'bg-success'}">
+                            ${item.quantity <= item.reorder_level ? 'Low Stock' : 'In Stock'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editItem('${item.id}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Function to update dashboard stats
+        function updateDashboardStats(data) {
+            document.getElementById('total-items').textContent = data.length;
+            
+            const lowStockItems = data.filter(item => item.quantity <= item.reorder_level).length;
+            document.getElementById('low-stock-items').textContent = lowStockItems;
+        }
+        
+        // Function to load alerts
+        function loadAlerts() {
+            // This would be replaced with an actual API call
+            fetch('/api/inventory/alerts')
+                .then(response => response.json())
+                .then(data => {
+                    updateAlerts(data);
+                })
+                .catch(error => console.error('Error loading alerts:', error));
+        }
+        
+        // Function to update alerts
+        function updateAlerts(alerts) {
+            const alertsContainer = document.getElementById('alerts-container');
+            alertsContainer.innerHTML = '';
+            
+            if (alerts.length === 0) {
+                alertsContainer.innerHTML = '<div class="alert alert-info">No active alerts</div>';
+                return;
+            }
+            
+            alerts.forEach(alert => {
+                const alertElement = document.createElement('div');
+                alertElement.className = `alert alert-${alert.type === 'low_stock' ? 'warning' : 'danger'} mb-3`;
+                alertElement.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${alert.title}</strong>
+                            <p class="mb-0">${alert.message}</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resolveAlert('${alert.id}')">
+                            Resolve
+                        </button>
+                    </div>
+                `;
+                alertsContainer.appendChild(alertElement);
+            });
+            
+            document.getElementById('active-alerts').textContent = alerts.length;
+        }
+        
+        // Function to load reorder suggestions
+        function loadReorderSuggestions() {
+            // This would be replaced with an actual API call
+            fetch('/api/inventory/suggest-reorder')
+                .then(response => response.json())
+                .then(data => {
+                    updateReorderSuggestions(data);
+                })
+                .catch(error => console.error('Error loading reorder suggestions:', error));
+        }
+        
+        // Function to update reorder suggestions
+        function updateReorderSuggestions(suggestions) {
+            const suggestionsTable = document.getElementById('reorder-suggestions');
+            suggestionsTable.innerHTML = '';
+            
+            suggestions.forEach(suggestion => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${suggestion.item.name}</td>
+                    <td>${suggestion.current_stock} ${suggestion.item.unit}</td>
+                    <td>${suggestion.suggested_quantity} ${suggestion.item.unit}</td>
+                `;
+                suggestionsTable.appendChild(row);
+            });
+        }
+        
+        // Function to initialize chat
+        function initChat() {
+            const sendButton = document.getElementById('send-query');
+            const queryInput = document.getElementById('query-input');
+            const chatContainer = document.getElementById('chat-container');
+            
+            sendButton.addEventListener('click', function() {
+                const query = queryInput.value.trim();
+                if (query) {
+                    // Add user message to chat
+                    addMessageToChat('user', query);
+                    
+                    // Clear input
+                    queryInput.value = '';
+                    
+                    // Send query to AI
+                    sendQueryToAI(query);
+                }
+            });
+            
+            queryInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendButton.click();
+                }
+            });
+        }
+        
+        // Function to add message to chat
+        function addMessageToChat(type, message) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageElement = document.createElement('div');
+            messageElement.className = `chat-message ${type}-message`;
+            messageElement.textContent = message;
+            chatContainer.appendChild(messageElement);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Function to send query to AI
+        function sendQueryToAI(query) {
+            // This would be replaced with an actual API call
+            fetch('/api/ai-bot/inventory/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query: query
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                addMessageToChat('bot', data.response);
+            })
+            .catch(error => {
+                console.error('Error sending query to AI:', error);
+                addMessageToChat('bot', 'Sorry, I encountered an error processing your query.');
+            });
+        }
+        
+        // Function to initialize report generation
+        function initReportGeneration() {
+            const generateButton = document.getElementById('generate-report');
+            
+            generateButton.addEventListener('click', function() {
+                // This would be replaced with an actual API call
+                fetch('/api/ai-bot/inventory/report')
+                    .then(response => response.json())
+                    .then(data => {
+                        displayReport(data);
+                    })
+                    .catch(error => console.error('Error generating report:', error));
+            });
+        }
+        
+        // Function to display report
+        function displayReport(report) {
+            const reportContent = document.getElementById('report-content');
+            
+            // Create report HTML
+            let reportHTML = `
+                <div class="mb-4">
+                    <h4>Inventory Report</h4>
+                    <p>Generated on: ${new Date(report.timestamp).toLocaleString()}</p>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Items</h5>
+                                <h2 class="card-text">${report.total_items}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Active Alerts</h5>
+                                <h2 class="card-text">${report.active_alerts}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Low Stock Items</h5>
+                                <h2 class="card-text">${report.low_stock_items}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Low Stock Items</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Current Stock</th>
+                                        <th>Reorder Level</th>
+                                        <th>Suggested Order</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+            
+            // Add low stock items
+            report.suggestions.forEach(suggestion => {
+                reportHTML += `
+                    <tr>
+                        <td>${suggestion.item.name}</td>
+                        <td>${suggestion.current_stock} ${suggestion.item.unit}</td>
+                        <td>${suggestion.item.reorder_level} ${suggestion.item.unit}</td>
+                        <td>${suggestion.suggested_quantity} ${suggestion.item.unit}</td>
+                    </tr>
+                `;
+            });
+            
+            reportHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Active Alerts</h5>
+                    </div>
+                    <div class="card-body">
+            `;
+            
+            if (report.alerts.length === 0) {
+                reportHTML += '<div class="alert alert-info">No active alerts</div>';
+            } else {
+                reportHTML += '<div class="list-group">';
+                report.alerts.forEach(alert => {
+                    reportHTML += `
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">${alert.title}</h6>
+                                    <p class="mb-1">${alert.message}</p>
+                                </div>
+                                <span class="badge bg-${alert.type === 'low_stock' ? 'warning' : 'danger'} rounded-pill">
+                                    ${alert.type === 'low_stock' ? 'Low Stock' : 'Expiry'}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+                reportHTML += '</div>';
+            }
+            
+            reportHTML += `
+                    </div>
+                </div>
+            `;
+            
+            reportContent.innerHTML = reportHTML;
+        }
+        
+        // Function to edit item
+        function editItem(itemId) {
+            // This would be implemented to edit an item
+            console.log('Edit item:', itemId);
+        }
+        
+        // Function to delete item
+        function deleteItem(itemId) {
+            // This would be implemented to delete an item
+            console.log('Delete item:', itemId);
+        }
+        
+        // Function to resolve alert
+        function resolveAlert(alertId) {
+            // This would be implemented to resolve an alert
+            console.log('Resolve alert:', alertId);
+        }
+
+        // WhatsApp Integration
+        document.getElementById('connect-whatsapp').addEventListener('click', async function() {
+            const phoneInput = document.getElementById('whatsapp-phone');
+            const statusDiv = document.getElementById('whatsapp-status');
+            const phone = phoneInput.value.trim();
+            
+            if (!phone) {
+                statusDiv.textContent = 'Please enter a valid phone number';
+                statusDiv.classList.remove('d-none', 'alert-info');
+                statusDiv.classList.add('alert-danger');
+                return;
+            }
+            
+            try {
+                statusDiv.textContent = 'Initiating WhatsApp connection...';
+                statusDiv.classList.remove('d-none', 'alert-danger');
+                statusDiv.classList.add('alert-info');
+                
+                const response = await fetch('/whatsapp/auth/initiate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone_number: phone })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    statusDiv.textContent = 'Authentication code sent to your WhatsApp. Please reply with "AUTH <code>" to verify.';
+                    statusDiv.classList.remove('alert-info');
+                    statusDiv.classList.add('alert-success');
+                } else {
+                    throw new Error(data.message || 'Failed to initiate WhatsApp connection');
+                }
+            } catch (error) {
+                statusDiv.textContent = error.message;
+                statusDiv.classList.remove('alert-info', 'alert-success');
+                statusDiv.classList.add('alert-danger');
+            }
+        });
+
+        // Save notification settings
+        document.getElementById('notification-settings').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const settings = {
+                low_stock_alerts: document.getElementById('low-stock-alerts').checked,
+                expiry_alerts: document.getElementById('expiry-alerts').checked,
+                reorder_suggestions: document.getElementById('reorder-suggestions').checked
+            };
+            
+            try {
+                const response = await fetch('/api/merchant/notification-settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('Settings saved successfully');
+                } else {
+                    throw new Error(data.message || 'Failed to save settings');
+                }
+            } catch (error) {
+                alert('Error saving settings: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html> 

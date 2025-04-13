@@ -63,8 +63,21 @@ BEGIN
             -- Create 1-5 items for each order
             item_count := FLOOR(RANDOM() * 5 + 1);
             FOR k IN 1..item_count LOOP
-                -- Select random item name
-                SELECT (ARRAY['Pizza', 'Burger', 'Salad', 'Pasta', 'Sandwich', 'Soup', 'Dessert', 'Drink'])[FLOOR(RANDOM() * 8 + 1)] INTO item_name;
+                -- Select random item name and description
+                SELECT 
+                    (ARRAY['Pizza', 'Burger', 'Salad', 'Pasta', 'Sandwich', 'Soup', 'Dessert', 'Drink'])[FLOOR(RANDOM() * 8 + 1)] INTO item_name;
+                
+                -- Generate description based on item name
+                special_instructions := CASE item_name
+                    WHEN 'Pizza' THEN 'Freshly baked pizza with your choice of toppings'
+                    WHEN 'Burger' THEN 'Juicy beef patty with fresh vegetables and special sauce'
+                    WHEN 'Salad' THEN 'Fresh mixed greens with seasonal vegetables'
+                    WHEN 'Pasta' THEN 'Al dente pasta with homemade sauce'
+                    WHEN 'Sandwich' THEN 'Fresh bread with premium fillings'
+                    WHEN 'Soup' THEN 'Homemade soup made with fresh ingredients'
+                    WHEN 'Dessert' THEN 'Sweet treat made in-house'
+                    WHEN 'Drink' THEN 'Refreshing beverage of your choice'
+                END;
                 
                 -- Calculate random quantity and unit price
                 quantity := FLOOR(RANDOM() * 3 + 1);
@@ -79,10 +92,10 @@ BEGIN
                 
                 -- Create order item
                 INSERT INTO order_items (
-                    order_id, item_name, quantity, unit_price, special_instructions
+                    order_id, item_name, quantity, unit_price, description, special_instructions
                 )
                 VALUES (
-                    order_id, item_name, quantity, unit_price, special_instructions
+                    order_id, item_name, quantity, unit_price, description, special_instructions
                 );
             END LOOP;
             
@@ -136,4 +149,88 @@ FROM generate_series(1, 30) AS i;
 SELECT generate_random_data();
 
 -- Drop the temporary function
-DROP FUNCTION generate_random_data(); 
+DROP FUNCTION generate_random_data();
+
+-- Create sample products for each merchant
+DO $$
+DECLARE
+    merchant_record RECORD;
+    product_id UUID;
+    category VARCHAR(100);
+    base_price DECIMAL(10,2);
+    product_name VARCHAR(255);
+    product_description TEXT;
+BEGIN
+    FOR merchant_record IN SELECT id, business_type FROM merchants LOOP
+        -- Create 5-10 products for each merchant
+        FOR i IN 1..FLOOR(RANDOM() * 6 + 5) LOOP
+            -- Select random category and price based on business type
+            CASE merchant_record.business_type
+                WHEN 'Restaurant' THEN
+                    category := (ARRAY['Appetizers', 'Main Courses', 'Desserts', 'Beverages'])[FLOOR(RANDOM() * 4 + 1)];
+                    base_price := CASE category
+                        WHEN 'Appetizers' THEN (RANDOM() * 10 + 5)::DECIMAL(10,2)
+                        WHEN 'Main Courses' THEN (RANDOM() * 20 + 10)::DECIMAL(10,2)
+                        WHEN 'Desserts' THEN (RANDOM() * 8 + 3)::DECIMAL(10,2)
+                        WHEN 'Beverages' THEN (RANDOM() * 5 + 2)::DECIMAL(10,2)
+                    END;
+                WHEN 'Cafe' THEN
+                    category := (ARRAY['Coffee', 'Tea', 'Pastries', 'Snacks'])[FLOOR(RANDOM() * 4 + 1)];
+                    base_price := CASE category
+                        WHEN 'Coffee' THEN (RANDOM() * 6 + 3)::DECIMAL(10,2)
+                        WHEN 'Tea' THEN (RANDOM() * 5 + 2)::DECIMAL(10,2)
+                        WHEN 'Pastries' THEN (RANDOM() * 7 + 4)::DECIMAL(10,2)
+                        WHEN 'Snacks' THEN (RANDOM() * 8 + 3)::DECIMAL(10,2)
+                    END;
+                WHEN 'Bakery' THEN
+                    category := (ARRAY['Bread', 'Pastries', 'Cakes', 'Cookies'])[FLOOR(RANDOM() * 4 + 1)];
+                    base_price := CASE category
+                        WHEN 'Bread' THEN (RANDOM() * 8 + 4)::DECIMAL(10,2)
+                        WHEN 'Pastries' THEN (RANDOM() * 7 + 3)::DECIMAL(10,2)
+                        WHEN 'Cakes' THEN (RANDOM() * 30 + 20)::DECIMAL(10,2)
+                        WHEN 'Cookies' THEN (RANDOM() * 5 + 2)::DECIMAL(10,2)
+                    END;
+                ELSE
+                    category := 'General';
+                    base_price := (RANDOM() * 15 + 5)::DECIMAL(10,2);
+            END CASE;
+
+            -- Generate product name and description
+            product_name := category || ' Item ' || i;
+            product_description := 'Delicious ' || LOWER(category) || ' from ' || merchant_record.business_type;
+
+            -- Insert product
+            INSERT INTO products (
+                merchant_id, name, description, base_price, category
+            ) VALUES (
+                merchant_record.id, product_name, product_description, base_price, category
+            ) RETURNING id INTO product_id;
+
+            -- Create variants if applicable
+            IF category IN ('Coffee', 'Tea', 'Beverages') THEN
+                -- Size variants
+                INSERT INTO product_variants (product_id, name, price)
+                VALUES 
+                    (product_id, 'Small', base_price),
+                    (product_id, 'Medium', base_price * 1.3),
+                    (product_id, 'Large', base_price * 1.6);
+            ELSIF category IN ('Cakes', 'Pastries') THEN
+                -- Portion variants
+                INSERT INTO product_variants (product_id, name, price)
+                VALUES 
+                    (product_id, 'Single', base_price),
+                    (product_id, 'Family', base_price * 2.5);
+            END IF;
+        END LOOP;
+    END LOOP;
+END $$;
+
+-- Update order items to reference products
+UPDATE order_items oi
+SET product_id = p.id,
+    variant_id = pv.id
+FROM products p
+LEFT JOIN product_variants pv ON pv.product_id = p.id
+WHERE oi.item_name = p.name
+AND (pv.name = 'Medium' OR pv.id IS NULL)
+LIMIT 1000; 

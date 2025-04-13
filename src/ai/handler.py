@@ -165,51 +165,26 @@ class AIHandler:
         """Generate AI response based on message and context"""
         try:
             # Get customer context
-            customer = db.query(Customer).filter(Customer.id == customer_id).first()
-            
-            # Get recent conversations for context
-            recent_conversations = db.query(Conversation).filter(
-                Conversation.customer_id == customer_id
-            ).order_by(Conversation.created_at.desc()).limit(5).all()
-            
-            # Get recent orders
-            recent_orders = db.query(Order).filter(
-                Order.customer_id == customer_id
-            ).order_by(Order.created_at.desc()).limit(3).all()
-            
-            # Build context for AI
-            context = {
-                "customer": {
-                    "name": customer.name,
-                    "phone": customer.phone_number,
-                    "email": customer.email
-                },
-                "recent_conversations": [
-                    {"message": c.message, "response": c.response}
-                    for c in recent_conversations
-                ],
-                "recent_orders": [
-                    {
-                        "order_number": o.order_number,
-                        "status": o.status,
-                        "items": o.items,
-                        "total_amount": o.total_amount
-                    }
-                    for o in recent_orders
-                ]
-            }
+            context = await self._get_customer_context(customer_id, db)
             
             # Check if message is about ordering
             if self._is_order_related(message):
-                # Search for products
-                products = await self.website_scraper.search_products(message)
+                # Search for products with descriptions
+                products = await this.website_scraper.search_products(message)
+                
+                # Format products with descriptions
+                formatted_products = [{
+                    "name": product["name"],
+                    "price": product["price"],
+                    "description": product.get("description", "No description available")
+                } for product in products]
                 
                 # Generate order-related response
                 response = await this.client.chat.completions.create(
                     model=AI_MODEL,
                     messages=[
-                        {"role": "system", "content": "You are a helpful assistant that helps customers with their orders."},
-                        {"role": "user", "content": f"Context: {json.dumps(context)}\nProducts: {json.dumps(products)}\nMessage: {message}"}
+                        {"role": "system", "content": "You are a helpful assistant that helps customers with their orders. Include product descriptions in your responses when available."},
+                        {"role": "user", "content": f"Context: {json.dumps(context)}\nProducts: {json.dumps(formatted_products)}\nMessage: {message}"}
                     ],
                     max_tokens=MAX_TOKENS,
                     temperature=TEMPERATURE

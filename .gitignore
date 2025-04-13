@@ -8,8 +8,11 @@ credentials/
 
 # Environment variables
 .env
-.env.local
-.env.*.local
+.env.*
+
+# Google Cloud
+config/google-cloud-key.json
+**/google-cloud-key.json
 
 # Python
 __pycache__/
@@ -35,8 +38,8 @@ wheels/
 
 # Virtual Environment
 venv/
-env/
 ENV/
+env/
 
 # IDE
 .idea/
@@ -46,8 +49,8 @@ ENV/
 .DS_Store
 
 # Logs
-logs/
 *.log
+logs/
 
 # Database
 *.db
