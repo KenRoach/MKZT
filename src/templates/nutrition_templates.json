@@ -1,0 +1,34 @@
+{
+  "es": {
+    "welcome": {
+      "greeting": "👋 ¡Hola {user_name}! Bienvenida nuevamente a Mealkitz AI 💚",
+      "menu_header": "🍽️ Opciones para tu bienestar:",
+      "menu_options": [
+        "1️⃣ Ver historial de pedidos",
+        "2️⃣ Consultar puntos de fidelidad",
+        "3️⃣ Recomendarte recetas",
+        "4️⃣ Ver tu contador de calorías",
+        "5️⃣ Ver tu historial nutricional",
+        "6️⃣ Registrar lo que comiste y calcular calorías automáticamente",
+        "7️⃣ Recibir recetas semanales",
+        "8️⃣ Activar recordatorio diario de comidas"
+      ],
+      "order_prompt": "💬 Si deseas pedir comida, solo dime \"Quiero pedir\" y arrancamos con el menú 🍱"
+    },
+    "meal_input": {
+      "prompt": "📝 ¡Listo! Dime qué comiste y yo te digo cuántas calorías estimadas contiene 💡",
+      "examples": [
+        "• \"Desayuné 2 rebanadas de pan integral con aguacate y café\"",
+        "• \"Almorcé arroz con pollo y ensalada\"",
+        "• \"Cena: hamburguesa y papas\""
+      ]
+    },
+    "calorie_calculation": {
+      "header": "Calculando... 🔍\n\n✅ Esto es lo que encontré:\n",
+      "item_format": "• {emoji} {quantity} {food}: ~{calories} kcal",
+      "total": "🔢 Total estimado: {total} kcal",
+      "save_prompt": "¿Deseas guardar este {meal_type} en tu registro de hoy?"
+    },
+    "meal_saved": {
+      "
+} 

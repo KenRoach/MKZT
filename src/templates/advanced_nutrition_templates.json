@@ -1,0 +1,21 @@
+{
+  "es": {
+    "food_recognition": {
+      "analyzing": "🔍 Analizando tu comida...\n",
+      "identified_items": "✅ He identificado los siguientes alimentos:\n",
+      "item_format": "• {emoji} {food_name}: {confidence}% de seguridad\n",
+      "nutrition_header": "\n📊 Información nutricional:\n",
+      "nutrition_format": "• {nutrient}: {amount}{unit}",
+      "suggestions": "\n💡 Sugerencias para mejorar:\n"
+    },
+    "recommendations": {
+      "header": "🎯 Recomendaciones personalizadas:\n",
+      "immediate_actions": "⚡ Acciones inmediatas:\n",
+      "long_term_goals": "\n🎯 Objetivos a largo plazo:\n",
+      "suggested_foods": "\n🍽️ Alimentos recomendados:\n",
+      "food_format": "• {emoji} {food}: {benefit}"
+    },
+    "meal_plan": {
+      "header": "📅 Tu plan de comidas para la semana:\n",
+      "day_format": "\
+} 

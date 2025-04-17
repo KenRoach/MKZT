@@ -1,0 +1,18 @@
+# Default owners for everything in the repo
+*       @mealkitz/maintainers
+
+# Backend code
+/src/backend/     @mealkitz/backend-team
+
+# Frontend code
+/src/frontend/    @mealkitz/frontend-team
+
+# Infrastructure code
+/k8s/             @mealkitz/devops-team
+/.github/         @mealkitz/devops-team
+
+# Security-related code
+/src/security/    @mealkitz/security-team
+
+# Documentation
+/docs/            @mealkitz/tech-writers 

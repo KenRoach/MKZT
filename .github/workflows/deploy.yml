@@ -1,0 +1,149 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black flake8 isort mypy
+        
+    - name: Run linters
+      run: |
+        # Run black for code formatting
+        black --check src/
+        
+        # Run isort for import sorting
+        isort --check-only src/
+        
+        # Run flake8 for code style
+        flake8 src/ --count --max-line-length=100 --statistics
+        
+        # Run mypy for type checking
+        mypy src/
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mkzt_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mkzt_test
+        REDIS_URL: redis://localhost:6379/0
+        ENVIRONMENT: test
+        SECURITY_JWT_SECRET_KEY: test_secret_key
+        SECURITY_RATE_LIMIT_REQUESTS: 100
+        SECURITY_RATE_LIMIT_WINDOW: 3600
+        SECURITY_PASSWORD_SALT_ROUNDS: 12
+        SECURITY_SESSION_LIFETIME: 3600
+        SECURITY_CORS_ORIGINS: '["http://localhost:3000"]'
+        SECURITY_MAX_UPLOAD_SIZE: 5242880
+        LOG_LEVEL: DEBUG
+        LOG_FORMAT: json
+        LOG_OUTPUT: console
+      run: |
+        pytest -v --cov=src --cov-report=xml
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: true
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: ./Dockerfile.prod
+        push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/mkzt-app:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/mkzt-app:${{ github.sha }}
+        cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/mkzt-app:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/mkzt-app:buildcache,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to Render
+      uses: johnbeynon/render-deploy-action@v1
+      with:
+        service-id: ${{ secrets.RENDER_SERVICE_ID }}
+        api-key: ${{ secrets.RENDER_API_KEY }}
+        
+    - name: Notify deployment
+      run: |
+        echo "Deployment to Render completed successfully!" 

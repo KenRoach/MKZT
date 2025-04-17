@@ -1,0 +1,50 @@
+{
+  "dashboard": {
+    "title": "Security Monitoring Dashboard",
+    "panels": [
+      {
+        "title": "Failed Login Attempts",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(failed_login_attempts_total[5m])",
+            "legendFormat": "{{ip_address}}"
+          }
+        ]
+      },
+      {
+        "title": "Rate Limit Violations",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(rate_limit_hits_total[5m])",
+            "legendFormat": "{{endpoint}}"
+          }
+        ]
+      },
+      {
+        "title": "Suspicious Activities",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(suspicious_activities_total[5m])",
+            "legendFormat": "{{activity_type}}"
+          }
+        ]
+      },
+      {
+        "title": "Active Sessions",
+        "type": "gauge",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "active_sessions_total"
+          }
+        ]
+      }
+    ]
+  }
+} 

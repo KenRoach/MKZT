@@ -1,38 +1,21 @@
 version: '3.8'
 
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  api:
+    build: .
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/mkzt
+      - DATABASE_URL=postgresql://mealkitz:password@postgres:5432/mealkitz
       - REDIS_URL=redis://redis:6379/0
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_KEY=${SUPABASE_KEY}
-      - SECURITY_API_KEY_HEADER=X-API-Key
-      - SECURITY_RATE_LIMIT_REQUESTS=100
-      - SECURITY_RATE_LIMIT_WINDOW=3600
-      - DEBUG=True
     depends_on:
-      - db
+      - postgres
       - redis
-    volumes:
-      - .:/app
-    command: uvicorn src.app:app --host 0.0.0.0 --port 8000 --reload
 
-  db:
-    image: postgres:14
-    ports:
-      - "5432:5432"
+  postgres:
+    image: postgres:13
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=mkzt
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_DB: mealkitz
 
   redis:
     image: redis:7
@@ -41,70 +24,19 @@ services:
     volumes:
       - redis_data:/data
 
-  test:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/mkzt_test
-      - REDIS_URL=redis://redis:6379/0
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_KEY=${SUPABASE_KEY}
-      - SECURITY_API_KEY_HEADER=X-API-Key
-      - SECURITY_RATE_LIMIT_REQUESTS=100
-      - SECURITY_RATE_LIMIT_WINDOW=3600
-      - TESTING=True
-    depends_on:
-      - db
-      - redis
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
     volumes:
-      - .:/app
-    command: pytest -v
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
 
-  backup:
-    image: postgres:14
-    volumes:
-      - ./scripts:/scripts
-      - ./backups:/backups
-      - ./.env:/app/.env
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-    depends_on:
-      - db
-    entrypoint: ["/bin/bash", "-c"]
-    command: |
-      "apt-get update && apt-get install -y cron && 
-       echo '0 2 * * * /scripts/backup_database.sh >> /var/log/cron.log 2>&1' > /etc/cron.d/backup-cron && 
-       chmod 0644 /etc/cron.d/backup-cron && 
-       crontab /etc/cron.d/backup-cron && 
-       touch /var/log/cron.log && 
-       service cron start && 
-       tail -f /var/log/cron.log"
-
-  metabase:
-    image: metabase/metabase:latest
+  grafana:
+    image: grafana/grafana
     ports:
       - "3000:3000"
-    environment:
-      - MB_DB_TYPE=postgres
-      - MB_DB_DBNAME=mkzt
-      - MB_DB_PORT=5432
-      - MB_DB_USER=postgres
-      - MB_DB_PASS=postgres
-      - MB_DB_HOST=db
-      - MB_ENCRYPTION_SECRET_KEY=${MB_ENCRYPTION_SECRET_KEY:-your-secret-key}
-      - JAVA_TIMEZONE=UTC
-      - MB_EMAIL_SMTP_HOST=${SMTP_SERVER}
-      - MB_EMAIL_SMTP_PORT=${SMTP_PORT}
-      - MB_EMAIL_SMTP_USERNAME=${SMTP_USERNAME}
-      - MB_EMAIL_SMTP_PASSWORD=${SMTP_PASSWORD}
-      - MB_EMAIL_FROM=${FROM_EMAIL}
-      - MB_EMAIL_REPLY_TO=${FROM_EMAIL}
-      - MB_SITE_URL=http://localhost:3000
     depends_on:
-      - db
-    volumes:
-      - metabase_data:/metabase-data
+      - prometheus
 
 volumes:
   postgres_data:

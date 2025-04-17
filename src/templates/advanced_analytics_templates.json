@@ -1,0 +1,38 @@
+{
+  "es": {
+    "advanced_analytics": {
+      "sales_patterns": {
+        "header": "📊 Patrones de Venta Avanzados",
+        "hourly": "⏰ Patrones por Hora:\n{patterns}",
+        "weekly": "📅 Patrones Semanales:\n{patterns}",
+        "seasonal": "🗓️ Tendencias Estacionales:\n{trends}",
+        "correlations": "🔄 Correlaciones entre Productos:\n{correlations}",
+        "weather": "🌦️ Impacto del Clima:\n{impact}",
+        "events": "🎉 Impacto de Eventos:\n{impact}"
+      },
+      "pricing": {
+        "header": "💰 Recomendaciones de Precio IA",
+        "optimal": "✨ Precios Óptimos:\n{prices}",
+        "dynamic": "🔄 Reglas de Precio Dinámico:\n{rules}",
+        "schedule": "📅 Calendario de Implementación:\n{schedule}",
+        "impact": "📈 Impacto Esperado:\n{impact}"
+      },
+      "segmentation": {
+        "header": "👥 Segmentación Avanzada de Clientes",
+        "high_value": "🏆 Clientes de Alto Valor:\n{details}",
+        "frequent": "🔄 Clientes Frecuentes:\n{details}",
+        "new": "✨ Clientes Nuevos:\n{details}",
+        "at_risk": "⚠️ Clientes en Riesgo:\n{details}",
+        "dormant": "💤 Clientes Dormidos:\n{details}",
+        "opportunities": "🎯 Oportunidades por Segmento:\n{opportunities}"
+      },
+      "inventory": {
+        "header": "📦 Predicciones de Inventario IA",
+        "predictions": "📊 Predicciones Diarias:\n{predictions}",
+        "reorder": "🔄 Puntos de Reorden:\n{points}",
+        "safety": "🛡️ Stock de Seguridad:\n{stock}",
+        "recommendations": "💡 Recomendaciones de Pedido:\n{recommendations}"
+      }
+    }
+  }
+} 

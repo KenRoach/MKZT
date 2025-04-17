@@ -1,0 +1,10 @@
+{
+  "es": {
+    "delivery_management": {
+      "assigned_deliveries": "📦 Entregas asignadas:\n{deliveries}",
+      "completed_deliveries": "✅ Entregas completadas ({period}):\n{deliveries}",
+      "pending_pickups": "⏳ Pedidos pendientes de recogida:\n{pickups}",
+      "average_times": "🕒
+    }
+  }
+} 

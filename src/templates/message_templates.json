@@ -1,0 +1,12 @@
+{
+  "en": {
+    "new_order": {
+      "text": "🔔 Hello {restaurant}! New order received.\n\n🧾 Order #{order_id}:\n{items}\n\n💰 Payment received via {payment_method}\n📍 Delivery to: {address}\n\nCan you confirm the estimated preparation time?",
+      "buttons": [
+        {"id": "prep_15", "text": "15 minutes"},
+        {"id": "prep_20", "text": "20 minutes"},
+        {"id": "prep_30", "text": "30 minutes"}
+      ]
+    }
+  }
+} 

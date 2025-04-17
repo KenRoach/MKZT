@@ -6,6 +6,10 @@ from sqlalchemy.orm import Session
 from src.utils.database import get_db
 from src.utils.metrics_tracker import MetricsTracker
 from src.utils.notification_handler import NotificationHandler
+from src.utils.security_audit import get_audit_logs
+from src.monitoring.security_metrics import metrics_collector
+from prometheus_client import generate_latest
+import json
 
 router = APIRouter()
 templates = Jinja2Templates(directory="src/templates")
@@ -47,4 +51,52 @@ async def get_metrics(db: Session = Depends(get_db)):
     metrics_tracker = MetricsTracker(db)
     end_time = datetime.utcnow()
     start_time = end_time - timedelta(hours=24)
-    return metrics_tracker.get_metrics(start_time, end_time) 
+    return metrics_tracker.get_metrics(start_time, end_time)
+
+@router.get("/security/metrics")
+async def security_metrics():
+    """Get security metrics in Prometheus format"""
+    return generate_latest()
+
+@router.get("/security/dashboard")
+async def security_dashboard():
+    """Get security dashboard data"""
+    now = datetime.utcnow()
+    hour_ago = now - timedelta(hours=1)
+    
+    # Get recent audit logs
+    audit_logs = await get_audit_logs(
+        start_time=hour_ago,
+        end_time=now,
+        limit=1000
+    )
+    
+    # Aggregate metrics
+    metrics = {
+        "failed_logins": {
+            "total": len([log for log in audit_logs if log.event_type == "failed_login"]),
+            "by_ip": {}
+        },
+        "rate_limit_hits": {
+            "total": len([log for log in audit_logs if log.event_type == "rate_limit"]),
+            "by_endpoint": {}
+        },
+        "suspicious_activities": {
+            "total": len([log for log in audit_logs if log.event_type == "suspicious"]),
+            "by_type": {}
+        },
+        "blocked_ips": list(metrics_collector._blocked_ips),
+        "active_sessions": metrics_collector.active_sessions._value.get(),
+    }
+    
+    return metrics
+
+@router.get("/security/alerts")
+async def security_alerts():
+    """Get recent security alerts"""
+    return list(alert_manager.alert_history.items())
+
+@router.get("/security/blocked-ips")
+async def blocked_ips():
+    """Get currently blocked IPs"""
+    return list(metrics_collector._blocked_ips) 

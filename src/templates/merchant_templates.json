@@ -1,0 +1,26 @@
+{
+  "es": {
+    "welcome": {
+      "greeting": "👋 ¡Hola {merchant_name}! Bienvenido nuevamente al panel de emprendedores de Mealkitz.\nEstás conectado como responsable de {restaurant_name} 🍣",
+      "menu_header": "📊 Opciones disponibles:",
+      "menu_options": [
+        "1️⃣ Ver mis ventas del día 💵",
+        "2️⃣ Consultar inventario 📦",
+        "3️⃣ Actualizar el menú 📲",
+        "4️⃣ Ver pedidos en curso 📬",
+        "5️⃣ Gestionar promociones 🎯",
+        "6️⃣ Historial de clientes 🧑‍🤝‍🧑",
+        "7️⃣ Cambiar horario de atención 🕐",
+        "8️⃣ Reportar un problema ⚠️",
+        "9️⃣ Cerrar sesión 🔒"
+      ],
+      "menu_footer": "✏️ Escribe el número o el nombre de la opción para continuar."
+    },
+    "sales_summary": {
+      "summary": "📊 Resumen de ventas ({period}):\n• Total: ${total}\n• Pedidos: {orders}\n• Ticket promedio: ${average
+    },
+    "sales_performance": {
+      "summary": "📊 Resumen de ventas ({period}):\n• Total: ${total}\n• Pedidos: {orders}\n• Ticket promedio: ${average
+    }
+  }
+} 

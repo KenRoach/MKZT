@@ -1,139 +1,141 @@
-# Order Management System
+# Mealkitz AI
 
-A comprehensive order management system with multi-channel support, intelligent routing, and real-time tracking.
+Advanced AI-powered food delivery and nutrition management system.
 
 ## Features
 
-- **Multi-Channel Order Processing**
-  - WhatsApp integration
-  - Web App support
-  - Mobile App support
-  - Instagram integration
-  - SMS support
-  - Third-party API integration
+- 👤 Consumer Features
+  - Order management
+  - Nutrition tracking
+  - Recipe suggestions
+  - Personalized recommendations
 
-- **Intelligent Order Management**
-  - Agentic decision engine for order routing
-  - Real-time order tracking
-  - Automated issue detection
-  - Performance monitoring
-
-- **Merchant Dashboard**
-  - Real-time performance metrics
-  - Order analytics
+- 🧑‍🍳 Merchant Features
+  - Sales analytics
+  - Inventory management
   - Customer insights
-  - Inventory alerts
+  - Promotion management
 
-- **Driver Coordination**
-  - Real-time location tracking
-  - Automated driver assignment
-  - Delivery status updates
+- 🛵 Driver Features
+  - Route optimization
+  - Earnings tracking
+  - Performance metrics
+  - Document management
 
-- **Consumer Notifications**
-  - Multi-language support (English, Spanish, Portuguese)
-  - Multi-channel notifications
-  - Order confirmations
-  - Status updates
-  - Tracking information
+## Getting Started
 
-## Tech Stack
+### Prerequisites
 
-- **Backend**: FastAPI
-- **Database**: PostgreSQL (Supabase)
-- **Caching**: Redis
-- **Authentication**: JWT
-- **API Documentation**: OpenAPI (Swagger)
+- Python 3.9+
+- PostgreSQL 13+
+- Redis 6+
+- Docker (optional)
 
-## Prerequisites
-
-- Python 3.8+
-- PostgreSQL
-- Redis
-- Supabase account
-
-## Installation
+### Installation
 
 1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd order-management-system
-   ```
+```bash
+git clone https://github.com/mealkitz/mealkitz-ai.git
+cd mealkitz-ai
+```
 
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+2. Create virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+.\venv\Scripts\activate   # Windows
+```
 
 3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
 4. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
 
-5. Run database migrations:
-   ```bash
-   python src/scripts/run_migrations.py
-   ```
+5. Initialize database:
+```bash
+python manage.py db upgrade
+```
 
-## Running the Application
+### Running the Application
 
-1. Start the development server:
-   ```bash
-   uvicorn src.app:app --reload
-   ```
+#### Development
+```bash
+uvicorn src.app:app --reload
+```
 
-2. Access the API documentation:
-   - Swagger UI: http://localhost:8000/docs
-   - ReDoc: http://localhost:8000/redoc
+#### Production
+```bash
+docker-compose up -d
+```
 
-## API Endpoints
+## Testing
 
-### Health Check
-- `GET /health` - Check system health
+Run tests:
+```bash
+pytest tests/
+```
 
-### Metrics
-- `GET /metrics` - Get system metrics
+Run with coverage:
+```bash
+pytest tests/ --cov=src
+```
 
-### Merchants
-- `GET /api/v1/merchants` - List merchants
-- `GET /api/v1/merchants/{merchant_id}` - Get merchant details
-- `POST /api/v1/merchants` - Create merchant
-- `PUT /api/v1/merchants/{merchant_id}` - Update merchant
+## Documentation
 
-### Orders
-- `GET /api/v1/orders` - List orders
-- `GET /api/v1/orders/{order_id}` - Get order details
-- `POST /api/v1/orders` - Create order
-- `PUT /api/v1/orders/{order_id}` - Update order
-- `GET /api/v1/orders/{order_id}/tracking` - Get order tracking
-
-### Drivers
-- `GET /api/v1/drivers` - List drivers
-- `GET /api/v1/drivers/{driver_id}` - Get driver details
-- `POST /api/v1/drivers` - Create driver
-- `PUT /api/v1/drivers/{driver_id}` - Update driver
-- `PUT /api/v1/drivers/{driver_id}/location` - Update driver location
-
-### Customers
-- `GET /api/v1/customers` - List customers
-- `GET /api/v1/customers/{customer_id}` - Get customer details
-- `POST /api/v1/customers` - Create customer
-- `PUT /api/v1/customers/{customer_id}` - Update customer
+API documentation is available at `/docs` when running the application.
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+
+# Example interactions for different actors
+async def test_multi_actor_conversation():
+    # Customer order
+    customer_response = await conversation_manager.handle_customer_message(
+        order_id="TEST123",
+        customer_id="CUST123",
+        message="Hola, quiero un California Roll y un té frío"
+    )
+    print(f"Customer Response: {customer_response}")
+
+    # Kitchen acknowledgment
+    kitchen_response = await conversation_manager.handle_kitchen_message(
+        order_id="TEST123",
+        staff_id="STAFF123",
+        message="15 minutos"
+    )
+    print(f"Kitchen Response: {kitchen_response}")
+
+    # Driver confirmation
+    driver_response = await conversation_manager.handle_driver_message(
+        order_id="TEST123",
+        driver_id="DRIVER123",
+        message="Confirmo disponibilidad"
+    )
+    print(f"Driver Response: {driver_response}")
+
+# 1. Build the production images
+docker compose -f docker-compose.prod.yml build
+
+# 2. Start the entire stack
+docker compose -f docker-compose.prod.yml up -d
+
+# 3. Verify all services are running
+docker compose -f docker-compose.prod.yml ps
+
+# 4. Check application logs
+docker compose -f docker-compose.prod.yml logs -f app 
