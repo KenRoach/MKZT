@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, development ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, development ]
 
 jobs:
   test:
@@ -23,6 +23,11 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      # Add redis if needed for integration tests
+      # redis:
+      #   image: redis:6
+      #   ports:
+      #     - 6379:6379
 
     steps:
     - uses: actions/checkout@v3
@@ -33,21 +38,40 @@ jobs:
         python-version: '3.11'
         
     - name: Install Poetry
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
     - name: Install dependencies
-      run: poetry install
-        
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Install project
+      run: poetry install --no-interaction
+
+    - name: Install Linting/Formatting tools
+      run: poetry add --group dev flake8 black isort pytest-cov
+
+    - name: Run Linting and Formatting Checks
+      run: |
+        poetry run flake8 src tests
+        poetry run black . --check
+        poetry run isort . --check-only --diff
+
     - name: Run tests
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/whatsapp_bot_test
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        WHATSAPP_API_TOKEN: ${{ secrets.WHATSAPP_API_TOKEN }}
-        WHATSAPP_PHONE_NUMBER_ID: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
-        WHATSAPP_VERIFY_TOKEN: ${{ secrets.WHATSAPP_VERIFY_TOKEN }}
-        CRM_API_KEY: ${{ secrets.CRM_API_KEY }}
-        CRM_BASE_URL: ${{ secrets.CRM_BASE_URL }}
+        # REDIS_URL: redis://localhost:6379 # Uncomment if redis service is enabled
+        TESTING: true # Example flag for tests
+        # Add other strictly necessary env vars for testing here
       run: poetry run pytest --cov=src --cov-report=xml
         
     - name: Upload coverage to Codecov
@@ -55,6 +79,7 @@ jobs:
       with:
         file: ./coverage.xml
         fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }} # Optional: Add Codecov token if needed
 
   deploy:
     needs: test
@@ -75,15 +100,45 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
       
-    - name: Build, tag, and push image to Amazon ECR
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: whatsapp-bot
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build and push Docker image
+      id: build-and-push
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.login-ecr.outputs.registry }}/whatsapp-bot:${{ github.sha }} # Use your ECR repo name
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
     - name: Deploy to ECS
+      id: deploy-ecs
       run: |
-        aws ecs update-service --cluster whatsapp-bot-cluster --service whatsapp-bot-service --force-new-deployment 
+        aws ecs update-service \
+          --cluster whatsapp-bot-cluster \
+          --service whatsapp-bot-service \
+          --force-new-deployment \
+          --no-cli-pager
+      # Add --task-definition if you manage task defs separately
+
+    - name: Wait for ECS service stability
+      run: |
+        aws ecs wait services-stable \
+          --cluster whatsapp-bot-cluster \
+          --service whatsapp-bot-service \
+          --no-cli-pager
+
+    - name: Notify on Failure
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `Deployment Failed for commit: ${context.sha}`,
+            body: `The deployment triggered by commit ${context.sha} failed. Please check the workflow logs: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+          }) 
